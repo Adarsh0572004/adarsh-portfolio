@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: adarsh-singh-portfolio
+    name: adarshportfolio
     runtime: static
     buildCommand: echo "Static portfolio ready"
     staticPublishPath: ./dist
