@@ -1,0 +1,20 @@
+import fs from 'node:fs';
+import vm from 'node:vm';
+import assert from 'node:assert/strict';
+const nodes=new Map();
+function node(id){if(!nodes.has(id))nodes.set(id,{id,attributes:{},handlers:{},hidden:false,tabIndex:0,addEventListener(k,f){this.handlers[k]=f;},setAttribute(k,v){this.attributes[k]=v;},getAttribute(k){return this.attributes[k];},focus(){this.focused=true;}});return nodes.get(id);}
+const tabs=['vault','handoff','access'].map(id=>{const t=node('tab-'+id);t.attributes['aria-controls']='panel-'+id;node('panel-'+id).hidden=id!=='vault';return t;});
+vm.runInNewContext(fs.readFileSync('dist/script.js','utf8'),{document:{getElementById:node,querySelectorAll:()=>tabs},setInterval(){},Intl,Date,navigator:{clipboard:{writeText:async()=>{}}}});
+tabs[1].handlers.click();
+assert.equal(tabs[1].attributes['aria-selected'],'true');
+assert.equal(node('panel-handoff').hidden,false);
+assert.equal(node('panel-vault').hidden,true);
+assert.equal(tabs[0].tabIndex,-1);
+let prevented=false;
+tabs[1].handlers.keydown({key:'End',preventDefault(){prevented=true;}});
+assert.ok(prevented);assert.ok(tabs[2].focused);assert.equal(node('panel-access').hidden,false);
+tabs[2].handlers.keydown({key:'ArrowRight',preventDefault(){}});
+assert.equal(tabs[0].attributes['aria-selected'],'true');assert.equal(node('panel-vault').hidden,false);
+assert.equal([...nodes.values()].filter(n=>n.id.startsWith('panel-')&&!n.hidden).length,1);
+await node('copy-email').handlers.click();assert.equal(node('copy-status').textContent,'Email copied. Talk soon.');
+console.log('PASS: architecture click selection, focus, keyboard wrap, one visible panel, email feedback');

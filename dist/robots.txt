@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://adarshportfolio-soed.onrender.com/sitemap.xml
